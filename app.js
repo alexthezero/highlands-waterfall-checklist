@@ -337,27 +337,208 @@ clearCustomBtn.addEventListener("click", () => {
   render();
 });
 
-exportBtn.addEventListener("click", () => {
+function wrapText(doc, text, x, y, maxWidth, lineHeight) {
+  const lines = doc.splitTextToSize(String(text), maxWidth);
+  lines.forEach(line => {
+    doc.text(line, x, y);
+    y += lineHeight;
+  });
+  return y;
+}
+
+function drawStamp(doc, x, y, label, visited) {
+  if (visited) {
+    doc.setDrawColor(35, 96, 61);
+    doc.setTextColor(35, 96, 61);
+  } else {
+    doc.setDrawColor(140, 140, 140);
+    doc.setTextColor(120, 120, 120);
+  }
+
+  doc.setLineWidth(1);
+  doc.circle(x, y, 13);
+  doc.circle(x, y, 10.5);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.text(label, x, y + 1.5, { align: "center" });
+}
+
+function drawPassportCard(doc, waterfall, visited, note, x, y, w, h) {
+  doc.setDrawColor(210, 220, 210);
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(x, y, w, h, 5, 5, "FD");
+
+  doc.setFillColor(233, 241, 229);
+  doc.roundedRect(x + 4, y + 4, w - 8, 11, 3, 3, "F");
+
+  doc.setTextColor(38, 61, 42);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  const titleLines = doc.splitTextToSize(waterfall.name, w - 42);
+  doc.text(titleLines.slice(0, 2), x + 8, y + 10);
+
+  drawStamp(doc, x + w - 19, y + 18, visited ? "VISITED" : "TO GO", visited);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.7);
+  doc.setTextColor(70, 80, 72);
+  doc.text(`Area: ${waterfall.area}`, x + 8, y + 24);
+  doc.text(`Difficulty: ${waterfall.difficulty}`, x + 8, y + 30);
+  doc.text(`Time: ${waterfall.time}`, x + 8, y + 36);
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(38, 61, 42);
+  doc.text("Tags:", x + 8, y + 44);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(70, 80, 72);
+  const tagsText = waterfall.tags.join(", ");
+  let currentY = wrapText(doc, tagsText, x + 18, y + 44, w - 26, 4.2);
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(38, 61, 42);
+  currentY += 3;
+  doc.text("Notes:", x + 8, currentY);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(70, 80, 72);
+  const noteText = note || "No notes added yet.";
+  const noteLines = doc.splitTextToSize(noteText, w - 16).slice(0, 4);
+  doc.text(noteLines, x + 8, currentY + 5);
+}
+
+function addPageBackground(doc, title) {
+  doc.setFillColor(250, 251, 248);
+  doc.rect(0, 0, 216, 279, "F");
+  doc.setDrawColor(210, 220, 210);
+  doc.roundedRect(12, 12, 192, 255, 6, 6, "S");
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(38, 61, 42);
+  doc.setFontSize(18);
+  doc.text(title, 18, 26);
+}
+
+function exportPassportPDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF library did not load yet. Refresh the page and try again.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+
   const checked = getChecked();
   const notes = getNotes();
   const waterfalls = getAllWaterfalls();
+  const visited = waterfalls.filter(w => checked[w.id]).length;
+  const total = waterfalls.length;
+  const percent = total ? Math.round((visited / total) * 100) : 0;
+  const generatedDate = new Date().toLocaleDateString();
 
-  const lines = waterfalls.map(w => {
-    const status = checked[w.id] ? "Visited" : "Not visited";
-    const note = notes[w.id] ? ` | Notes: ${notes[w.id].replace(/\n/g, " ")}` : "";
-    return `${status} - ${w.name} - ${w.area}${note}`;
+  doc.setFillColor(38, 61, 42);
+  doc.rect(0, 0, 216, 279, "F");
+
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(1.2);
+  doc.roundedRect(18, 18, 180, 240, 8, 8, "S");
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.text("STATE OF NORTH CAROLINA", 108, 42, { align: "center" });
+
+  doc.setFontSize(24);
+  doc.text("WATERFALL PASSPORT", 108, 58, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(13);
+  doc.text("Highlands, NC Explorer Edition", 108, 69, { align: "center" });
+
+  doc.setDrawColor(255, 255, 255);
+  doc.circle(108, 108, 28);
+  doc.circle(108, 108, 22);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("HIGHLANDS", 108, 103, { align: "center" });
+  doc.text("FALLS", 108, 111, { align: "center" });
+  doc.text("PASS", 108, 119, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(`Waterfalls Visited: ${visited} / ${total}`, 108, 162, { align: "center" });
+  doc.text(`Progress: ${percent}%`, 108, 171, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.text("Issued to: ________________________________", 108, 198, { align: "center" });
+  doc.text(`Generated: ${generatedDate}`, 108, 210, { align: "center" });
+
+  doc.setFontSize(9);
+  doc.text("Use this passport to track your waterfall adventures.", 108, 236, { align: "center" });
+
+  doc.addPage();
+  doc.setFillColor(233, 241, 229);
+  doc.rect(0, 0, 216, 279, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(38, 61, 42);
+  doc.setFontSize(20);
+  doc.text("Passport Summary", 18, 24);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(70, 80, 72);
+  doc.text(`Total Waterfalls: ${total}`, 18, 36);
+  doc.text(`Visited: ${visited}`, 18, 43);
+  doc.text(`Remaining: ${total - visited}`, 18, 50);
+  doc.text(`Completion: ${percent}%`, 18, 57);
+
+  doc.setDrawColor(73, 107, 74);
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(18, 66, 180, 16, 4, 4, "FD");
+
+  if (percent > 0) {
+    doc.setFillColor(73, 107, 74);
+    doc.roundedRect(18, 66, 180 * (percent / 100), 16, 4, 4, "F");
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(38, 61, 42);
+  doc.text("Waterfall Entries", 18, 98);
+
+  let x = 18;
+  let y = 106;
+  const cardW = 84;
+  const cardH = 66;
+  const gapX = 12;
+  const gapY = 10;
+
+  waterfalls.forEach((w, index) => {
+    const visitedStatus = !!checked[w.id];
+    const note = notes[w.id] || "";
+
+    drawPassportCard(doc, w, visitedStatus, note, x, y, cardW, cardH);
+
+    if (x === 18) {
+      x = 18 + cardW + gapX;
+    } else {
+      x = 18;
+      y += cardH + gapY;
+    }
+
+    if (y + cardH > 260 && index < waterfalls.length - 1) {
+      doc.addPage();
+      addPageBackground(doc, "Waterfall Entries");
+      x = 18;
+      y = 36;
+    }
   });
 
-  const text = `Highlands NC Waterfall Checklist\n\n${lines.join("\n")}`;
-  const blob = new Blob([text], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
+  doc.save("highlands-waterfall-passport.pdf");
+}
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "highlands-nc-waterfall-checklist.txt";
-  a.click();
-
-  URL.revokeObjectURL(url);
-});
+exportBtn.addEventListener("click", exportPassportPDF);
 
 render();
