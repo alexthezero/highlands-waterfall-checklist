@@ -15,8 +15,6 @@
   ];
 
   let map;
-  let baseLine;
-  let litLine;
   let markers = [];
 
   function getChecks() {
@@ -148,9 +146,7 @@
     const route = orderedStops();
     const checks = getChecks();
     const visitedCount = route.filter(stop => checks[stop.id]).length;
-    const farthestIndex = route.reduce((max, stop, index) => checks[stop.id] ? Math.max(max, index) : max, -1);
     const allLatLng = route.map(stop => [stop.lat, stop.lng]);
-    const litLatLng = farthestIndex >= 0 ? route.slice(0, farthestIndex + 1).map(stop => [stop.lat, stop.lng]) : [];
 
     const pill = document.getElementById("routePill");
     const fill = document.getElementById("routeFill");
@@ -177,25 +173,6 @@
 
     markers.forEach(marker => marker.remove());
     markers = [];
-
-    if (baseLine) baseLine.remove();
-    if (litLine) litLine.remove();
-
-    baseLine = L.polyline(allLatLng, {
-      color: "#9daf96",
-      weight: 5,
-      opacity: 0.65,
-      lineCap: "round"
-    }).addTo(map);
-
-    if (litLatLng.length > 1) {
-      litLine = L.polyline(litLatLng, {
-        color: "#48724d",
-        weight: 6,
-        opacity: 0.95,
-        lineCap: "round"
-      }).addTo(map);
-    }
 
     route.forEach((stop, index) => {
       const visited = !!checks[stop.id];
