@@ -71,6 +71,20 @@ function refreshBridalVeilPhoto() {
   attachBridalVeilFallbacks();
 }
 
+function moveRouteProgressCardLower() {
+  const card = document.getElementById("routeProgressCard");
+  const footerActions = document.querySelector(".footer-actions");
+
+  if (!card || !footerActions) return;
+  if (card.nextElementSibling === footerActions) return;
+
+  footerActions.parentNode.insertBefore(card, footerActions);
+
+  setTimeout(() => {
+    window.dispatchEvent(new Event("resize"));
+  }, 80);
+}
+
 if (typeof render === "function" && !window.__bridalVeilPhotoRenderWrapped) {
   window.__bridalVeilPhotoRenderWrapped = true;
   const originalRenderForBridalVeilPhoto = render;
@@ -78,9 +92,13 @@ if (typeof render === "function" && !window.__bridalVeilPhotoRenderWrapped) {
   render = function renderWithBridalVeilPhoto() {
     originalRenderForBridalVeilPhoto();
     requestAnimationFrame(refreshBridalVeilPhoto);
+    requestAnimationFrame(moveRouteProgressCardLower);
   };
 }
 
 refreshBridalVeilPhoto();
+moveRouteProgressCardLower();
 setTimeout(refreshBridalVeilPhoto, 300);
 setTimeout(refreshBridalVeilPhoto, 1200);
+setTimeout(moveRouteProgressCardLower, 300);
+setTimeout(moveRouteProgressCardLower, 1200);
