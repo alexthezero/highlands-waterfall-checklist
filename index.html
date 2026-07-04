@@ -3,113 +3,662 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#496b4a" />
   <title>Highlands NC Waterfall Checklist</title>
-  <meta name="description" content="Track waterfalls around Highlands, North Carolina. Check off visited falls, save notes, sort by travel direction, open Apple Maps, and export a waterfall passport PDF." />
 
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Highlands NC Waterfall Checklist" />
-  <meta property="og:description" content="Check off Highlands-area waterfalls, save notes, sort your route, open Apple Maps, and export a passport PDF." />
-  <meta property="og:url" content="https://alexthezero.github.io/highlands-waterfall-checklist/" />
-  <meta property="og:image" content="https://alexthezero.github.io/highlands-waterfall-checklist/site-thumbnail.svg" />
-  <meta property="og:image:type" content="image/svg+xml" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --card: #ffffff;
+      --text: #1f2a24;
+      --muted: #66736b;
+      --green: #315c42;
+      --green-light: #e4eee7;
+      --accent: #9b6b3d;
+      --border: #ddd5c8;
+      --danger: #8a3a2f;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Highlands NC Waterfall Checklist" />
-  <meta name="twitter:description" content="A simple waterfall checklist and passport tracker for Highlands, NC." />
-  <meta name="twitter:image" content="https://alexthezero.github.io/highlands-waterfall-checklist/site-thumbnail.svg" />
+    * {
+      box-sizing: border-box;
+    }
 
-  <link rel="icon" href="site-thumbnail.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(rgba(244,241,234,0.92), rgba(244,241,234,0.92)),
+        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80");
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      color: var(--text);
+    }
+
+    header {
+      padding: 32px 18px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: var(--green);
+      letter-spacing: -0.04em;
+    }
+
+    header p {
+      margin: 10px auto 0;
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .app {
+      max-width: 900px;
+      margin: 0 auto 40px;
+      padding: 0 16px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      margin-bottom: 18px;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .progress-bar {
+      height: 14px;
+      background: #e6dfd3;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--green), #6f8f62);
+      border-radius: 999px;
+      transition: 0.25s ease;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    input,
+    select {
+      background: #fff;
+      color: var(--text);
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: var(--green);
+      color: white;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .secondary-btn {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .danger-btn {
+      background: #f1ded9;
+      color: var(--danger);
+    }
+
+    .list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      display: grid;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.visited {
+      background: #f5faf6;
+      border-color: #b7d2be;
+    }
+
+    .top-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .check {
+      width: 28px;
+      height: 28px;
+      accent-color: var(--green);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .title-wrap {
+      flex: 1;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin: 0;
+      color: var(--green);
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      background: var(--green-light);
+      color: var(--green);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .tag.warning {
+      background: #f8eadb;
+      color: #805222;
+    }
+
+    .tag.danger {
+      background: #f4ded9;
+      color: var(--danger);
+    }
+
+    .notes {
+      color: var(--text);
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .card-actions a,
+    .card-actions button {
+      text-decoration: none;
+      text-align: center;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .map-link {
+      background: var(--green);
+      color: white;
+    }
+
+    .photo-btn {
+      background: #efe6d7;
+      color: var(--accent);
+      border: none;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 70px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      font-family: inherit;
+      resize: vertical;
+      color: var(--text);
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 25px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 20px;
+    }
+
+    @media (min-width: 700px) {
+      header h1 {
+        font-size: 2.6rem;
+      }
+
+      .controls {
+        grid-template-columns: 1.5fr 1fr 1fr;
+      }
+
+      .button-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <div class="app">
-    <header class="hero">
-      <div class="hero-content">
-        <div class="eyebrow">Highlands, North Carolina</div>
-        <h1>Waterfall Checklist</h1>
-        <p class="subtitle">
-          Check off every waterfall you visit around Highlands, NC. Save notes, filter by difficulty, and open map directions fast.
-        </p>
+  <header>
+    <h1>Highlands NC Waterfall Checklist</h1>
+    <p>
+      Track the waterfalls you have visited, filter by type, open maps, and save personal notes for your Highlands, North Carolina waterfall trip.
+    </p>
+  </header>
 
-        <div class="progress-card" aria-label="Waterfall visit progress">
-          <div class="progress-top">
-            <span id="progressText">0 of 0 visited</span>
-            <span id="progressPercent">0%</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <section class="toolbar" aria-label="Checklist controls">
-      <div class="search-row">
-        <input class="search" id="searchInput" type="search" placeholder="Search waterfalls..." />
-        <button class="small-btn danger" id="resetBtn" type="button">Reset Checks</button>
+  <main class="app">
+    <section class="panel">
+      <div class="progress-row">
+        <span id="progressText">0 of 0 visited</span>
+        <span id="percentText">0%</span>
       </div>
 
-      <div class="filters" id="filters" aria-label="Filter waterfalls">
-        <button class="filter-btn active" type="button" data-filter="all">All</button>
-        <button class="filter-btn" type="button" data-filter="Roadside">Roadside</button>
-        <button class="filter-btn" type="button" data-filter="Easy">Easy</button>
-        <button class="filter-btn" type="button" data-filter="Moderate">Moderate</button>
-        <button class="filter-btn" type="button" data-filter="Swimming">Swimming</button>
-        <button class="filter-btn" type="button" data-filter="Walk Behind">Walk Behind</button>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
       </div>
-    </section>
 
-    <section class="route-progress-card" id="routeProgressCard" aria-label="Route progress map">
-      <div class="route-head">
-        <div>
-          <h2>Route Progress Map</h2>
-          <p>Loading actual Highlands/Cashiers map...</p>
-        </div>
-        <div class="route-pill" id="routePill">0 / 12</div>
-      </div>
-      <div id="actualRouteMap" aria-label="Waterfall locations map"></div>
-      <div class="route-bar"><div class="route-fill" id="routeFill"></div></div>
-      <div class="route-note" id="routeNote">Choose a direction, then check off stops as you go.</div>
-    </section>
+      <div class="controls">
+        <input id="searchInput" type="text" placeholder="Search waterfalls..." />
 
-    <main class="list" id="waterfallList" aria-live="polite"></main>
-
-    <section class="add-card" aria-label="Add custom waterfall stop">
-      <h2>Add your own stop</h2>
-      <form class="add-form" id="addForm">
-        <input id="newName" type="text" placeholder="Waterfall name" required />
-        <input id="newArea" type="text" placeholder="Area / town" />
-        <select id="newDifficulty" aria-label="Difficulty">
-          <option value="Easy">Easy</option>
-          <option value="Moderate">Moderate</option>
-          <option value="Roadside">Roadside</option>
+        <select id="filterSelect">
+          <option value="all">Show all</option>
+          <option value="unvisited">Not visited yet</option>
+          <option value="visited">Visited</option>
+          <option value="easy">Easy / roadside</option>
+          <option value="hike">Hiking required</option>
+          <option value="swim">Swimming / water play</option>
+          <option value="caution">Use caution</option>
         </select>
-        <button class="add-btn" type="submit">Add</button>
-      </form>
+
+        <select id="sortSelect">
+          <option value="default">Suggested order</option>
+          <option value="name">A-Z</option>
+          <option value="difficulty">Easy first</option>
+        </select>
+      </div>
+
+      <div class="button-row" style="margin-top: 12px;">
+        <button class="secondary-btn" id="exportBtn">Copy Trip Summary</button>
+        <button class="danger-btn" id="resetBtn">Reset Checklist</button>
+      </div>
     </section>
 
-    <div class="footer-actions">
-      <button class="small-btn" id="exportBtn" type="button">Export Passport PDF</button>
-      <button class="small-btn" id="clearCustomBtn" type="button">Clear Custom Stops</button>
-    </div>
+    <section class="list" id="waterfallList"></section>
+  </main>
 
-    <footer>
-      Always check road, weather, trail, and water conditions before going. Wet rocks, roadside pull-offs, and fast-moving water can be dangerous.
-    </footer>
-  </div>
+  <footer>
+    Built for a Highlands, NC waterfall trip. Always check road, trail, weather, and water conditions before going.
+  </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js?v=3"></script>
-  <script src="passport-overrides.js?v=2"></script>
-  <script src="apple-maps.js?v=1"></script>
-  <script src="travel-sort.js?v=1"></script>
-  <script src="route-progress-real-map.js?v=2"></script>
-  <script src="waterfall-photos.js?v=2"></script>
-  <script src="bridal-veil-photo.js?v=1"></script>
+  <script>
+    const waterfalls = [
+      {
+        id: "bridal-veil",
+        name: "Bridal Veil Falls",
+        area: "US-64 West of Highlands",
+        difficulty: "Easy",
+        type: ["easy", "roadside"],
+        tags: ["Roadside", "Easy stop", "Photo spot"],
+        note: "One of the easiest and most iconic stops near Highlands. Great quick photo stop with very little walking.",
+        map: "https://www.google.com/maps/search/?api=1&query=Bridal+Veil+Falls+Highlands+NC"
+      },
+      {
+        id: "dry-falls",
+        name: "Dry Falls",
+        area: "Cullasaja River Gorge",
+        difficulty: "Easy",
+        type: ["easy", "hike"],
+        tags: ["Walk-behind", "Short path", "Parking fee"],
+        note: "A must-do Highlands waterfall. Short walk from the parking area and you can walk behind the waterfall.",
+        map: "https://www.google.com/maps/search/?api=1&query=Dry+Falls+Highlands+NC"
+      },
+      {
+        id: "glen-falls",
+        name: "Glen Falls",
+        area: "NC-106 near Highlands",
+        difficulty: "Moderate",
+        type: ["hike"],
+        tags: ["Triple waterfall", "Hike", "Scenic"],
+        note: "A beautiful multi-tier waterfall hike. Better for when you want more than a quick roadside stop.",
+        map: "https://www.google.com/maps/search/?api=1&query=Glen+Falls+Highlands+NC"
+      },
+      {
+        id: "cullasaja-falls",
+        name: "Cullasaja Falls",
+        area: "Mountain Waters Scenic Byway",
+        difficulty: "Caution",
+        type: ["caution", "roadside"],
+        tags: ["Roadside view", "Steep area", "Use caution"],
+        note: "Best treated as a scenic roadside view. The road is narrow and the unofficial descent is steep.",
+        map: "https://www.google.com/maps/search/?api=1&query=Cullasaja+Falls+Highlands+NC"
+      },
+      {
+        id: "bust-your-butt",
+        name: "Bust Your Butt Falls / Quarry Falls",
+        area: "US-64 near Highlands",
+        difficulty: "Caution",
+        type: ["swim", "caution", "easy"],
+        tags: ["Swimming hole", "Natural slide", "Use caution"],
+        note: "Popular roadside swimming and sliding spot. Only enter the water when conditions are safe.",
+        map: "https://www.google.com/maps/search/?api=1&query=Bust+Your+Butt+Falls+Highlands+NC"
+      },
+      {
+        id: "secret-falls",
+        name: "Secret Falls / Big Shoals Falls",
+        area: "South of Highlands",
+        difficulty: "Easy hike",
+        type: ["hike", "swim"],
+        tags: ["Short hike", "Swimming", "Gravel road"],
+        note: "A local favorite with a short hike. Expect gravel-road access and check conditions before going.",
+        map: "https://www.google.com/maps/search/?api=1&query=Secret+Falls+Big+Shoals+Falls+Highlands+NC"
+      },
+      {
+        id: "silver-run",
+        name: "Silver Run Falls",
+        area: "Cashiers area",
+        difficulty: "Easy",
+        type: ["easy", "hike", "swim"],
+        tags: ["Easy walk", "Swimming", "Family-friendly"],
+        note: "A short, easy waterfall stop near Cashiers. Great add-on if you are already heading that direction.",
+        map: "https://www.google.com/maps/search/?api=1&query=Silver+Run+Falls+Cashiers+NC"
+      },
+      {
+        id: "whitewater-falls",
+        name: "Whitewater Falls",
+        area: "Near Cashiers",
+        difficulty: "Easy",
+        type: ["easy", "hike"],
+        tags: ["Huge waterfall", "Viewing platform", "Short trail"],
+        note: "One of the biggest waterfall views in the region. Short walk to viewing areas, with stairs for closer views.",
+        map: "https://www.google.com/maps/search/?api=1&query=Whitewater+Falls+North+Carolina"
+      },
+      {
+        id: "picklesimer",
+        name: "Picklesimer Rockhouse Falls",
+        area: "Highlands area",
+        difficulty: "Short hike",
+        type: ["hike"],
+        tags: ["Short hike", "Quiet spot", "Walk-behind"],
+        note: "A peaceful forest waterfall and a good choice if you want something less obvious than Dry Falls.",
+        map: "https://www.google.com/maps/search/?api=1&query=Picklesimer+Rockhouse+Falls+Highlands+NC"
+      },
+      {
+        id: "hidden-falls",
+        name: "Hidden Falls / Upper Middle Creek Falls",
+        area: "Highlands Outpost area",
+        difficulty: "Moderate",
+        type: ["hike"],
+        tags: ["1-mile round trip", "Moderate", "Forest trail"],
+        note: "A shorter but more trail-based waterfall stop. Good when you want a little adventure without a full-day hike.",
+        map: "https://www.google.com/maps/search/?api=1&query=Hidden+Falls+Upper+Middle+Creek+Falls+Highlands+NC"
+      }
+    ];
+
+    const listEl = document.getElementById("waterfallList");
+    const searchInput = document.getElementById("searchInput");
+    const filterSelect = document.getElementById("filterSelect");
+    const sortSelect = document.getElementById("sortSelect");
+    const progressText = document.getElementById("progressText");
+    const percentText = document.getElementById("percentText");
+    const progressFill = document.getElementById("progressFill");
+    const resetBtn = document.getElementById("resetBtn");
+    const exportBtn = document.getElementById("exportBtn");
+
+    let visited = JSON.parse(localStorage.getItem("highlandsWaterfallVisited")) || {};
+    let notes = JSON.parse(localStorage.getItem("highlandsWaterfallNotes")) || {};
+
+    function saveData() {
+      localStorage.setItem("highlandsWaterfallVisited", JSON.stringify(visited));
+      localStorage.setItem("highlandsWaterfallNotes", JSON.stringify(notes));
+    }
+
+    function getFilteredWaterfalls() {
+      const search = searchInput.value.toLowerCase().trim();
+      const filter = filterSelect.value;
+      let filtered = [...waterfalls];
+
+      if (search) {
+        filtered = filtered.filter(w =>
+          w.name.toLowerCase().includes(search) ||
+          w.area.toLowerCase().includes(search) ||
+          w.note.toLowerCase().includes(search) ||
+          w.tags.join(" ").toLowerCase().includes(search)
+        );
+      }
+
+      if (filter === "visited") {
+        filtered = filtered.filter(w => visited[w.id]);
+      } else if (filter === "unvisited") {
+        filtered = filtered.filter(w => !visited[w.id]);
+      } else if (filter !== "all") {
+        filtered = filtered.filter(w => w.type.includes(filter));
+      }
+
+      if (sortSelect.value === "name") {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+      }
+
+      if (sortSelect.value === "difficulty") {
+        const order = { "Easy": 1, "Easy hike": 2, "Short hike": 3, "Moderate": 4, "Caution": 5 };
+        filtered.sort((a, b) => (order[a.difficulty] || 99) - (order[b.difficulty] || 99));
+      }
+
+      return filtered;
+    }
+
+    function renderList() {
+      const filtered = getFilteredWaterfalls();
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="panel empty">No waterfalls match your search.</div>`;
+        updateProgress();
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(w => {
+        const isVisited = Boolean(visited[w.id]);
+        const userNote = notes[w.id] || "";
+
+        const tagHtml = w.tags.map(tag => {
+          const lower = tag.toLowerCase();
+          let className = "tag";
+
+          if (lower.includes("caution") || lower.includes("steep")) {
+            className += " danger";
+          } else if (lower.includes("fee") || lower.includes("gravel")) {
+            className += " warning";
+          }
+
+          return `<span class="${className}">${tag}</span>`;
+        }).join("");
+
+        return `
+          <article class="card ${isVisited ? "visited" : ""}">
+            <div class="top-line">
+              <input 
+                class="check" 
+                type="checkbox" 
+                ${isVisited ? "checked" : ""}
+                onchange="toggleVisited('${w.id}')"
+                aria-label="Mark ${w.name} as visited"
+              />
+
+              <div class="title-wrap">
+                <h2 class="title">${w.name}</h2>
+                <p class="subtitle">${w.area} • ${w.difficulty}</p>
+              </div>
+            </div>
+
+            <div class="tag-row">${tagHtml}</div>
+
+            <p class="notes">${w.note}</p>
+
+            <textarea 
+              placeholder="Add your own notes, date visited, parking tips, etc."
+              oninput="updateNote('${w.id}', this.value)"
+            >${userNote}</textarea>
+
+            <div class="card-actions">
+              <a class="map-link" href="${w.map}" target="_blank" rel="noopener">Open Map</a>
+              <button class="photo-btn" onclick="markPhotoIdea('${w.id}')">Photo Idea</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const total = waterfalls.length;
+      const completed = waterfalls.filter(w => visited[w.id]).length;
+      const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+      progressText.textContent = `${completed} of ${total} visited`;
+      percentText.textContent = `${percent}%`;
+      progressFill.style.width = `${percent}%`;
+    }
+
+    function toggleVisited(id) {
+      visited[id] = !visited[id];
+
+      if (!visited[id]) {
+        delete visited[id];
+      }
+
+      saveData();
+      renderList();
+    }
+
+    function updateNote(id, value) {
+      notes[id] = value;
+
+      if (!value.trim()) {
+        delete notes[id];
+      }
+
+      saveData();
+      updateProgress();
+    }
+
+    function markPhotoIdea(id) {
+      const waterfall = waterfalls.find(w => w.id === id);
+      const ideas = {
+        "bridal-veil": "Try a wide shot from the roadside and a close shot with the rock wall framing the falls.",
+        "dry-falls": "Take one photo from the overlook and one from behind the waterfall looking outward.",
+        "glen-falls": "Shoot each tier separately, then get one vertical shot of the cascade trail view.",
+        "cullasaja-falls": "Use the safest pull-off only. A zoomed roadside shot is better than climbing down.",
+        "bust-your-butt": "Capture the water movement over the smooth rock, but keep your phone dry.",
+        "secret-falls": "Try a low angle near the pool if water levels are safe.",
+        "silver-run": "A centered vertical shot works great here, especially with people for scale.",
+        "whitewater-falls": "Use the viewing platform for a dramatic wide shot.",
+        "picklesimer": "Frame the falls with mossy rocks or trees for a hidden-gem look.",
+        "hidden-falls": "Take a trail approach shot first, then a closer waterfall detail shot."
+      };
+
+      alert(`${waterfall.name} photo idea:\n\n${ideas[id] || "Take one wide shot, one close-up, and one photo with people for scale."}`);
+    }
+
+    function copyTripSummary() {
+      const completed = waterfalls.filter(w => visited[w.id]);
+      const remaining = waterfalls.filter(w => !visited[w.id]);
+
+      let summary = "Highlands NC Waterfall Checklist\n\n";
+
+      summary += `Visited: ${completed.length}/${waterfalls.length}\n\n`;
+
+      summary += "Visited Waterfalls:\n";
+      summary += completed.length
+        ? completed.map(w => `✓ ${w.name}`).join("\n")
+        : "None yet.";
+
+      summary += "\n\nStill To Visit:\n";
+      summary += remaining.length
+        ? remaining.map(w => `• ${w.name}`).join("\n")
+        : "All waterfalls completed!";
+
+      navigator.clipboard.writeText(summary)
+        .then(() => alert("Trip summary copied to clipboard."))
+        .catch(() => alert(summary));
+    }
+
+    resetBtn.addEventListener("click", () => {
+      const confirmReset = confirm("Reset all checked waterfalls and notes?");
+
+      if (!confirmReset) return;
+
+      visited = {};
+      notes = {};
+      saveData();
+      renderList();
+    });
+
+    exportBtn.addEventListener("click", copyTripSummary);
+
+    searchInput.addEventListener("input", renderList);
+    filterSelect.addEventListener("change", renderList);
+    sortSelect.addEventListener("change", renderList);
+
+    renderList();
+  </script>
 </body>
 </html>
