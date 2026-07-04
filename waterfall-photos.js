@@ -1,7 +1,7 @@
-const WATERFALL_PHOTOS = [
+window.WATERFALL_PHOTOS = [
   {
     matches: ["bridal veil falls"],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/BridalVeilFallsMacon.jpg/250px-BridalVeilFallsMacon.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/BridalVeilFallsMacon.jpg/640px-BridalVeilFallsMacon.jpg",
     source: "Photo source: Wikimedia Commons"
   },
   {
@@ -61,9 +61,13 @@ const WATERFALL_PHOTOS = [
   }
 ];
 
+function normalizeWaterfallText(value) {
+  return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
 function getPhotoMatchForCard(card) {
-  const text = (card.textContent || "").toLowerCase();
-  return WATERFALL_PHOTOS.find(entry => entry.matches.some(name => text.includes(name)));
+  const title = normalizeWaterfallText(card.querySelector("h2")?.textContent || card.textContent);
+  return window.WATERFALL_PHOTOS.find(entry => entry.matches.some(name => title.includes(name)));
 }
 
 function installWaterfallPhotoStyles() {
@@ -73,31 +77,64 @@ function installWaterfallPhotoStyles() {
   style.id = "waterfallPhotoStyles";
   style.textContent = `
     .waterfall-photo-wrap {
-      margin: 0 0 12px;
+      margin: 0 0 14px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #e8efe6;
+      border: 1px solid rgba(73, 107, 74, 0.18);
     }
 
     .waterfall-photo-link {
       display: block;
       text-decoration: none;
+      line-height: 0;
     }
 
     .waterfall-photo {
       width: 100%;
+      min-height: 170px;
       aspect-ratio: 16 / 10;
       object-fit: cover;
       display: block;
-      border-radius: 16px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      background: #edf2ea;
+      background: linear-gradient(135deg, #dfe9dc, #f7faf5);
     }
 
     .waterfall-photo-source {
-      margin-top: 6px;
+      padding: 7px 10px 8px;
       font-size: 11px;
+      line-height: 1.25;
       color: var(--muted);
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .waterfall-photo-fallback {
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 800;
+      background: linear-gradient(135deg, #dfe9dc, #f7faf5);
     }
   `;
   document.head.appendChild(style);
+}
+
+function buildWaterfallPhotoHTML(match) {
+  return `
+    <a class="waterfall-photo-link" href="${match.image}" target="_blank" rel="noopener noreferrer">
+      <img
+        class="waterfall-photo"
+        src="${match.image}"
+        alt="${match.matches[0]} photo"
+        loading="eager"
+        decoding="async"
+        referrerpolicy="no-referrer"
+      />
+    </a>
+    <div class="waterfall-photo-source">${match.source}</div>
+  `;
 }
 
 function applyWaterfallPhotos() {
@@ -111,35 +148,51 @@ function applyWaterfallPhotos() {
     if (!photoWrap) {
       photoWrap = document.createElement("div");
       photoWrap.className = "waterfall-photo-wrap";
-      card.prepend(photoWrap);
+      card.insertBefore(photoWrap, card.firstElementChild);
     }
 
-    photoWrap.innerHTML = `
-      <a class="waterfall-photo-link" href="${match.image}" target="_blank" rel="noopener noreferrer">
-        <img
-          class="waterfall-photo"
-          src="${match.image}"
-          alt="${match.matches[0]} photo"
-          loading="lazy"
-          decoding="async"
-          referrerpolicy="no-referrer"
-        />
-      </a>
-      <div class="waterfall-photo-source">${match.source}</div>
-    `;
+    if (photoWrap.dataset.image === match.image) return;
+
+    photoWrap.dataset.image = match.image;
+    photoWrap.innerHTML = buildWaterfallPhotoHTML(match);
+
+    const img = photoWrap.querySelector("img");
+    img.addEventListener("error", () => {
+      photoWrap.innerHTML = `
+        <div class="waterfall-photo-fallback">Photo could not load from the source site.</div>
+        <div class="waterfall-photo-source">${match.source}</div>
+      `;
+    }, { once: true });
   });
 }
 
-if (typeof render === "function") {
+if (typeof render === "function" && !window.__waterfallPhotoRenderWrapped) {
+  window.__waterfallPhotoRenderWrapped = true;
   const originalRenderForPhotos = render;
   render = function renderWithPhotos() {
     originalRenderForPhotos();
-    applyWaterfallPhotos();
+    requestAnimationFrame(applyWaterfallPhotos);
   };
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", applyWaterfallPhotos);
-} else {
+function startWaterfallPhotoWatcher() {
+  const list = document.getElementById("waterfallList");
+  if (!list || window.__waterfallPhotoWatcherStarted) return;
+
+  window.__waterfallPhotoWatcherStarted = true;
+  const observer = new MutationObserver(() => requestAnimationFrame(applyWaterfallPhotos));
+  observer.observe(list, { childList: true, subtree: true });
+}
+
+function bootWaterfallPhotos() {
   applyWaterfallPhotos();
+  startWaterfallPhotoWatcher();
+  setTimeout(applyWaterfallPhotos, 250);
+  setTimeout(applyWaterfallPhotos, 1000);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootWaterfallPhotos);
+} else {
+  bootWaterfallPhotos();
 }
