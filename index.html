@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#496b4a" />
+  <title>Highlands NC Waterfall Checklist</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-content">
+        <div class="eyebrow">Highlands, North Carolina</div>
+        <h1>Waterfall Checklist</h1>
+        <p class="subtitle">
+          Check off every waterfall you visit around Highlands, NC. Save notes, filter by difficulty, and open map directions fast.
+        </p>
+
+        <div class="progress-card" aria-label="Waterfall visit progress">
+          <div class="progress-top">
+            <span id="progressText">0 of 0 visited</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="Checklist controls">
+      <div class="search-row">
+        <input class="search" id="searchInput" type="search" placeholder="Search waterfalls..." />
+        <button class="small-btn danger" id="resetBtn" type="button">Reset Checks</button>
+      </div>
+
+      <div class="filters" id="filters" aria-label="Filter waterfalls">
+        <button class="filter-btn active" type="button" data-filter="all">All</button>
+        <button class="filter-btn" type="button" data-filter="Roadside">Roadside</button>
+        <button class="filter-btn" type="button" data-filter="Easy">Easy</button>
+        <button class="filter-btn" type="button" data-filter="Moderate">Moderate</button>
+        <button class="filter-btn" type="button" data-filter="Swimming">Swimming</button>
+        <button class="filter-btn" type="button" data-filter="Walk Behind">Walk Behind</button>
+      </div>
+    </section>
+
+    <main class="list" id="waterfallList" aria-live="polite"></main>
+
+    <section class="add-card" aria-label="Add custom waterfall stop">
+      <h2>Add your own stop</h2>
+      <form class="add-form" id="addForm">
+        <input id="newName" type="text" placeholder="Waterfall name" required />
+        <input id="newArea" type="text" placeholder="Area / town" />
+        <select id="newDifficulty" aria-label="Difficulty">
+          <option value="Easy">Easy</option>
+          <option value="Moderate">Moderate</option>
+          <option value="Roadside">Roadside</option>
+        </select>
+        <button class="add-btn" type="submit">Add</button>
+      </form>
+    </section>
+
+    <div class="footer-actions">
+      <button class="small-btn" id="exportBtn" type="button">Export List</button>
+      <button class="small-btn" id="clearCustomBtn" type="button">Clear Custom Stops</button>
+    </div>
+
+    <footer>
+      Always check road, weather, trail, and water conditions before going. Wet rocks, roadside pull-offs, and fast-moving water can be dangerous.
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
