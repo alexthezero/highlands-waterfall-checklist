@@ -26,4 +26,4 @@ After enabling GitHub Pages from the `main` branch and root folder, the live sit
 
 https://alexthezero.github.io/highlands-waterfall-checklist/
 
-If it does not load right away, give GitHub Pages a moment and refresh the page. If you recently updated files, try adding `?v=4` to the end of the URL to bypass browser cache.
+If it does not load right away, give GitHub Pages a moment and refresh the page. If you recently updated files, try adding `?v=5` to the end of the URL to bypass browser cache.
